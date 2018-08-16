@@ -4,6 +4,7 @@ const md5 = require('blueimp-md5');
 const {UserModel} = require('../db/users_db');
 
 const router = express.Router();
+const filter = {password:0,__v:0};
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -24,7 +25,7 @@ router.post('/register', function(req, res) {
 });
 router.post('/login', function(req, res) {
   const {username,password} = req.body;
-  UserModel.findOne({username,password:md5(password)},{password:0},(err,userDoc) =>{
+  UserModel.findOne({username,password:md5(password)},filter,(err,userDoc) =>{
     if(!userDoc){
       res.send({code:1,msg:'用户名或密码错误'})
     }else{
@@ -51,13 +52,25 @@ router.post('/updateUser', function(req, res) {
 
 router.get('/user', function(req, res) {
   const userid = req.cookies.userid;
-  UserModel.findOne({_id:userid},{password:0},(err,userDoc) =>{
+  UserModel.findOne({_id:userid},filter,(err,userDoc) =>{
     if(!userDoc){
       res.clearCookie('userid');
       res.send({code:1,msg:'请先登录'})
     }else{
-      console.log(userDoc)
+      console.log(userDoc);
       res.send({code: 0, data: userDoc})
+    }
+  })
+});
+router.get('/userList', function(req, res) {
+  const type = req.query.type;
+  console.log(type,req.query);
+  UserModel.find({type},filter,(err,userList) =>{
+    if(!userList.length){
+      res.send({code:1,msg:'暂无用户在线'})
+    }else{
+      console.log(userList.length);
+      res.send({code: 0, data: userList})
     }
   })
 });
